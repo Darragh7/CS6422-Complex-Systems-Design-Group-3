@@ -10,7 +10,11 @@ CREATE TABLE users (
     email      VARCHAR(100) UNIQUE,
     phone      VARCHAR(20)  UNIQUE,
     CONSTRAINT user_id_3_digits CHECK (user_id BETWEEN 100 AND 999),
-    CONSTRAINT contact_required CHECK (email IS NOT NULL OR phone IS NOT NULL)
+    CONSTRAINT contact_required CHECK (email IS NOT NULL OR phone IS NOT NULL),
+    CONSTRAINT phone_format CHECK (
+        phone ~ '^\+353 8[2-9][0-9]{7}$'
+        OR phone ~ '^\+91 [6-9][0-9]{9}$'
+    )
 );
 
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
