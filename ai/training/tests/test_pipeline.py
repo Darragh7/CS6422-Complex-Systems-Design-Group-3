@@ -1,4 +1,5 @@
 from ai.training.pipeline import run
+from ai.training.train import CANDIDATES
 
 
 def test_pipeline_smoke():
@@ -14,3 +15,5 @@ def test_pipeline_smoke():
     out = run(matches)
     assert set(out) >= {"log_loss", "accuracy", "baseline_home_accuracy"}
     assert 0 <= out["accuracy"] <= 1
+    assert out["selected_model"] in CANDIDATES
+    assert set(out["selection_scores"]["model"]) == set(CANDIDATES)

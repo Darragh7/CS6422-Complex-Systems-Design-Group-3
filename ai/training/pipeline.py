@@ -7,15 +7,18 @@ CONFIG = {
     "metrics": ["log_loss", "accuracy"],
     "baseline": "always_home",
     "test_frac": 0.2,
+    "cv_splits": 3,
 }
 
 
 def run(matches: list[dict], config: dict = CONFIG) -> dict:
-    """Chain stages: parse -> inspect -> clean -> label -> split -> features -> train -> evaluate."""
+    """Chain stages: parse -> inspect -> clean -> label -> split -> features -> select model -> evaluate."""
     df = pp.load_api_matches(matches)
     pp.inspect(df)
     df = pp.label_result(pp.clean(df))
     train_df, test_df = pp.time_split(df, config["test_frac"])
     # Stage 6 (explore) happens in notebooks on train_df only.
-    model = tr.train_model(tr.build_features(train_df), train_df[config["target"]])
-    return tr.evaluate(model, tr.build_features(test_df), test_df[config["target"]])
+    X_train, y_train = tr.build_features(train_df), train_df[config["target"]]
+    best, model, scores = tr.select_model(X_train, y_train, n_splits=config["cv_splits"])
+    result = tr.evaluate(model, tr.build_features(test_df), test_df[config["target"]])
+    return {**result, "selected_model": best, "selection_scores": scores}
