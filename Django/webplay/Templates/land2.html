@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STRIKE AI | Football Player Performance Predictor</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        sportDark: '#0b0c10',
+                        sportCard: '#16181d',
+                        sportBorder: '#262930',
+                        activeRed: '#ff1744',
+                        glowRed: '#ff2a2a',
+                        darkRed: '#800a20',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Impact', 'Teko', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'red-glow': '0 0 25px -5px rgba(255, 23, 68, 0.5)',
+                        'red-glow-lg': '0 0 40px 2px rgba(255, 23, 68, 0.6)',
+                        'card-glow': '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&family=Teko:wght@600;700&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            background-color: #0b0c10;
+            color: #ffffff;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+
+        .text-glow {
+            text-shadow: 0 0 15px rgba(255, 23, 68, 0.7);
+        }
+
+        .sport-grid {
+            background-image: radial-gradient(rgba(255, 23, 68, 0.15) 1px, transparent 0);
+            background-size: 30px 30px;
+            background-position: -19px -19px;
+        }
+
+        .clip-polygon {
+            clip-path: polygon(0 0, 100% 0, 95% 100%, 0% 100%);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0b0c10;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #ff1744;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #ff2a2a;
+        }
+
+        .glass-panel {
+            background: rgba(22, 24, 29, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .glass-panel-active {
+            background: rgba(22, 24, 29, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 23, 68, 0.4);
+            box-shadow: 0 0 20px rgba(255, 23, 68, 0.25);
+        }
+
+        /* Pulse animation for live indicators */
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.05); }
+        }
+
+        .pulse-active {
+            animation: pulseGlow 2s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="sport-grid antialiased selection:bg-activeRed selection:text-white">
+
+    <header class="sticky top-0 z-50 glass-panel border-b border-sportBorder/60">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            
+            <!-- Brand Logo -->
+            <a href="#" class="flex items-center gap-3 group">
+                <div class="w-10 h-10 bg-activeRed rounded-lg flex items-center justify-center transform -skew-x-12 group-hover:scale-105 transition-all shadow-red-glow">
+                    <i class="fa-solid fa-bolt text-white text-xl transform skew-x-12"></i>
+                </div>
+                <div class="flex flex-col">
+                    <span class="font-extrabold text-2xl tracking-wider text-white uppercase font-['Teko'] leading-none">
+                        STRIKE<span class="text-activeRed">AI</span>
+                    </span>
+                    <span class="text-[10px] tracking-widest text-gray-400 uppercase font-semibold">Pitch Analytics</span>
+                </div>
+            </a>
+
+            <!-- Navigation Links -->
+            <nav class="hidden md:flex items-center gap-8">
+                <a href="#features" class="text-sm font-medium text-gray-300 hover:text-activeRed transition-colors">Features</a>
+                <a href="#demo" class="text-sm font-medium text-gray-300 hover:text-activeRed transition-colors">Live Predictor</a>
+                <a href="#security" class="text-sm font-medium text-gray-300 hover:text-activeRed transition-colors">Security & Data</a>
+                <a href="#stats" class="text-sm font-medium text-gray-300 hover:text-activeRed transition-colors">Accuracy</a>
+            </nav>
+
+            <!-- Action Buttons -->
+            <div class="flex items-center gap-3">
+                <button onclick="openModal('loginModal')" class="px-5 py-2.5 text-sm font-semibold text-gray-200 hover:text-white transition-colors">
+                    Log In
+                </button>
+                <button onclick="openModal('registerModal')" class="relative inline-flex items-center justify-center px-6 py-2.5 text-sm font-bold text-white bg-activeRed rounded-md overflow-hidden group shadow-red-glow hover:shadow-red-glow-lg transition-all transform hover:-translate-y-0.5">
+                    <span class="absolute w-0 h-0 transition-all duration-300 ease-out bg-white rounded-full group-hover:w-32 group-hover:h-32 opacity-10"></span>
+                    <span class="relative uppercase tracking-wider flex items-center gap-2">
+                        Get Started <i class="fa-solid fa-arrow-right text-xs"></i>
+                    </span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <section class="relative pt-12 pb-20 lg:pt-20 lg:pb-32 overflow-hidden">
+        <!-- Ambient Glowing Background Spheres -->
+        <div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-activeRed/10 rounded-full blur-[140px] pointer-events-none"></div>
+        <div class="absolute top-1/3 right-10 w-[300px] h-[300px] bg-glowRed/10 rounded-full blur-[100px] pointer-events-none"></div>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="text-center max-w-3xl mx-auto mb-12">
+                <!-- Badge -->
+                <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-sportCard border border-activeRed/30 text-activeRed text-xs font-semibold uppercase tracking-widest mb-6 shadow-red-glow">
+                    <span class="w-2 h-2 rounded-full bg-activeRed pulse-active"></span>
+                    Next-Gen Football Predictive Intelligence
+                </div>
+
+                <!-- Main Heading -->
+                <h1 class="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight text-white uppercase italic leading-none mb-6">
+                    PREDICT <span class="inline-block pr-3 text-transparent bg-clip-text bg-gradient-to-r from-white via-red-200 to-activeRed">PLAYER</span> PERFORMANCE
+                </h1>
+
+                <p class="text-lg sm:text-xl text-gray-400 font-normal leading-relaxed mb-8">
+                    Harness advanced machine learning trained on historical season metrics. Predict goals, assists, pass ratings, and match impact with pinpoint precision before kick-off.
+                </p>
+
+                <!-- CTA Buttons -->
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                    <a href="#demo" class="w-full sm:w-auto px-8 py-4 bg-activeRed hover:bg-red-600 text-white font-bold rounded-lg shadow-red-glow hover:shadow-red-glow-lg transition-all transform hover:-translate-y-1 uppercase tracking-wider text-sm flex items-center justify-center gap-3">
+                        <i class="fa-solid fa-play"></i> Launch Interactive Predictor
+                    </a>
+                    <button onclick="openModal('registerModal')" class="w-full sm:w-auto px-8 py-4 bg-sportCard hover:bg-sportBorder text-gray-200 hover:text-white border border-sportBorder font-semibold rounded-lg transition-all text-sm uppercase tracking-wider flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-user-plus text-activeRed"></i> Create Free Account
+                    </button>
+                </div>
+            </div>
+
+            <!-- Key Metric Highlights Banner -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-12 max-w-5xl mx-auto">
+                <div class="glass-panel p-5 rounded-xl text-center border-l-4 border-l-activeRed">
+                    <div class="text-3xl lg:text-4xl font-extrabold text-white font-['Teko'] tracking-wider">94.8%</div>
+                    <div class="text-xs text-gray-400 uppercase font-semibold mt-1">Model Accuracy</div>
+                </div>
+                <div class="glass-panel p-5 rounded-xl text-center border-l-4 border-l-activeRed">
+                    <div class="text-3xl lg:text-4xl font-extrabold text-white font-['Teko'] tracking-wider">50,000+</div>
+                    <div class="text-xs text-gray-400 uppercase font-semibold mt-1">Player Datasets</div>
+                </div>
+                <div class="glass-panel p-5 rounded-xl text-center border-l-4 border-l-activeRed">
+                    <div class="text-3xl lg:text-4xl font-extrabold text-white font-['Teko'] tracking-wider">&lt; 150ms</div>
+                    <div class="text-xs text-gray-400 uppercase font-semibold mt-1">Prediction Speed</div>
+                </div>
+                <div class="glass-panel p-5 rounded-xl text-center border-l-4 border-l-activeRed">
+                    <div class="text-3xl lg:text-4xl font-extrabold text-white font-['Teko'] tracking-wider">AES-256</div>
+                    <div class="text-xs text-gray-400 uppercase font-semibold mt-1">Encrypted DB</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="demo" class="py-16 bg-sportDark relative">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            
+            <div class="flex flex-col md:flex-row md:items-end justify-between mb-10">
+                <div>
+                    <span class="text-activeRed font-bold text-xs uppercase tracking-widest">Interactive Simulator</span>
+                    <h2 class="text-3xl sm:text-5xl font-extrabold text-white uppercase italic tracking-tight">
+                        LIVE DEMO PREDICTOR
+                    </h2>
+                </div>
+                <p class="text-gray-400 text-sm max-w-md mt-2 md:mt-0">
+                    Select a star player or tweak environmental modifiers to see real-time machine learning prediction output.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                
+                <!-- Controls Panel -->
+                <div class="lg:col-span-5 glass-panel p-6 rounded-2xl border border-sportBorder">
+                    <h3 class="text-lg font-bold text-white uppercase tracking-wider mb-6 flex items-center gap-2">
+                        <i class="fa-solid fa-sliders text-activeRed"></i> Match Parameters
+                    </h3>
+
+                    <!-- Player Selection -->
+                    <div class="mb-5">
+                        <label class="block text-xs font-semibold text-gray-400 uppercase mb-2">Select Footballer</label>
+                        <select id="playerSelect" onchange="updatePrediction()" class="w-full bg-sportCard border border-sportBorder text-white text-sm rounded-lg p-3 focus:outline-none focus:border-activeRed transition-colors">
+                            <option value="haaland">Erling Haaland (Striker - Manchester City)</option>
+                            <option value="mbappe">Kylian Mbappé (Forward - Real Madrid)</option>
+                            <option value="bellingham">Jude Bellingham (Midfielder - Real Madrid)</option>
+                            <option value="vinicius">Vinícius Júnior (Winger - Real Madrid)</option>
+                            <option value="debruyne">Kevin De Bruyne (Playmaker - Manchester City)</option>
+                        </select>
+                    </div>
+
+                    <!-- Slider 1: Player Form -->
+                    <div class="mb-5">
+                        <div class="flex justify-between text-xs font-semibold uppercase mb-1">
+                            <span class="text-gray-400">Current Form Rating</span>
+                            <span id="formVal" class="text-activeRed font-bold">88%</span>
+                        </div>
+                        <input type="range" id="formSlider" min="50" max="100" value="88" oninput="updatePrediction()" class="w-full accent-activeRed cursor-pointer bg-sportBorder rounded-lg h-2">
+                    </div>
+
+                    <!-- Slider 2: Opposition Defense Strength -->
+                    <div class="mb-5">
+                        <div class="flex justify-between text-xs font-semibold uppercase mb-1">
+                            <span class="text-gray-400">Opposition Defensive Difficulty</span>
+                            <span id="oppVal" class="text-activeRed font-bold">75 / 100</span>
+                        </div>
+                        <input type="range" id="oppSlider" min="30" max="99" value="75" oninput="updatePrediction()" class="w-full accent-activeRed cursor-pointer bg-sportBorder rounded-lg h-2">
+                    </div>
+
+                    <!-- Toggle: Home / Away -->
+                    <div class="mb-6">
+                        <label class="block text-xs font-semibold text-gray-400 uppercase mb-2">Match Context</label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <button id="homeBtn" onclick="setMatchContext('home')" class="py-2.5 rounded-lg font-bold text-xs uppercase tracking-wider transition-all bg-activeRed text-white shadow-red-glow">
+                                <i class="fa-solid fa-house text-xs mr-1"></i> Home Advantage
+                            </button>
+                            <button id="awayBtn" onclick="setMatchContext('away')" class="py-2.5 rounded-lg font-bold text-xs uppercase tracking-wider transition-all bg-sportCard text-gray-400 border border-sportBorder hover:text-white">
+                                <i class="fa-solid fa-plane text-xs mr-1"></i> Away Fixture
+                            </button>
+                        </div>
+                    </div>
+
+                    <button onclick="triggerModelRecalculation()" class="w-full py-3.5 bg-gradient-to-r from-activeRed to-darkRed hover:from-red-600 hover:to-activeRed text-white font-extrabold uppercase tracking-widest text-xs rounded-lg shadow-red-glow transition-all flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-rotate text-sm"></i> Run Model Prediction
+                    </button>
+                </div>
+
+                <!-- Prediction Display Board -->
+                <div class="lg:col-span-7 glass-panel-active p-6 sm:p-8 rounded-2xl relative overflow-hidden">
+                    <div class="flex items-center justify-between border-b border-sportBorder/80 pb-4 mb-6">
+                        <div class="flex items-center gap-4">
+                            <div class="w-14 h-14 rounded-full bg-sportCard border-2 border-activeRed flex items-center justify-center overflow-hidden shadow-red-glow">
+                                <i id="playerIcon" class="fa-solid fa-user-ninja text-activeRed text-2xl"></i>
+                            </div>
+                            <div>
+                                <h4 id="displayPlayerName" class="text-xl sm:text-2xl font-black text-white uppercase italic">Erling Haaland</h4>
+                                <span id="displayPlayerRole" class="text-xs text-gray-400 uppercase tracking-widest font-semibold">Striker • Premier League</span>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-2xl font-extrabold text-activeRed font-['Teko'] leading-none">AI SCORE</div>
+                            <span id="aiConfidence" class="text-xs font-bold text-emerald-400">96.2% Confidence</span>
+                        </div>
+                    </div>
+
+                    <!-- Predicted Stat Cards Grid -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+                        
+                        <!-- Metric 1 -->
+                        <div class="bg-sportCard p-4 rounded-xl border border-sportBorder text-center">
+                            <span class="text-[10px] font-extrabold text-gray-400 uppercase tracking-wider block mb-1">Expected Goals (xG)</span>
+                            <div id="predGoals" class="text-3xl font-black text-white font-['Teko']">1.28</div>
+                            <span class="text-[10px] text-emerald-400 font-semibold"><i class="fa-solid fa-caret-up"></i> +0.18 vs avg</span>
+                        </div>
+
+                        <!-- Metric 2 -->
+                        <div class="bg-sportCard p-4 rounded-xl border border-sportBorder text-center">
+                            <span class="text-[10px] font-extrabold text-gray-400 uppercase tracking-wider block mb-1">Expected Assists (xA)</span>
+                            <div id="predAssists" class="text-3xl font-black text-white font-['Teko']">0.32</div>
+                            <span class="text-[10px] text-gray-400 font-semibold">Standard</span>
+                        </div>
+
+                        <!-- Metric 3 -->
+                        <div class="bg-sportCard p-4 rounded-xl border border-sportBorder text-center">
+                            <span class="text-[10px] font-extrabold text-gray-400 uppercase tracking-wider block mb-1">Passing Precision</span>
+                            <div id="predPass" class="text-3xl font-black text-white font-['Teko']">84%</div>
+                            <span class="text-[10px] text-emerald-400 font-semibold"><i class="fa-solid fa-caret-up"></i> +3% high</span>
+                        </div>
+
+                        <!-- Metric 4 -->
+                        <div class="bg-sportCard p-4 rounded-xl border border-sportBorder text-center">
+                            <span class="text-[10px] font-extrabold text-gray-400 uppercase tracking-wider block mb-1">Overall Impact Rating</span>
+                            <div id="predRating" class="text-3xl font-black text-activeRed font-['Teko'] text-glow">8.7</div>
+                            <span class="text-[10px] text-activeRed font-semibold">MOTM Candidate</span>
+                        </div>
+                    </div>
+
+                    <!-- Radar / Bar Visualizer Chart -->
+                    <div class="bg-sportCard/60 p-4 rounded-xl border border-sportBorder">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs font-bold text-gray-300 uppercase tracking-wider">Metric Distribution Forecast</span>
+                            <span class="text-[10px] text-gray-500 uppercase">Updated real-time</span>
+                        </div>
+                        <div class="h-48 relative">
+                            <canvas id="predictionChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <section id="features" class="py-20 relative bg-sportCard/30 border-y border-sportBorder/50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-2xl mx-auto mb-16">
+                <span class="text-activeRed font-bold text-xs uppercase tracking-widest">Built for Performance</span>
+                <h2 class="text-3xl sm:text-5xl font-black text-white uppercase italic tracking-tight mt-1">
+                    POWERED BY DATA SCIENCE
+                </h2>
+                <p class="text-gray-400 text-sm mt-3">
+                    Combining machine learning intelligence, responsive web interfaces, and cybersecurity standards.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                
+                <!-- Feature 1: ML Model -->
+                <div class="glass-panel p-8 rounded-2xl hover:border-activeRed/50 transition-all group">
+                    <div class="w-12 h-12 rounded-xl bg-activeRed/10 border border-activeRed/30 flex items-center justify-center text-activeRed text-xl mb-6 group-hover:scale-110 transition-transform shadow-red-glow">
+                        <i class="fa-solid fa-brain"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white uppercase tracking-wider mb-3">ML Performance Engine</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed mb-4">
+                        Trained on multi-season historical player metrics using regression models and neural network algorithms to forecast match outcomes.
+                    </p>
+                    <ul class="text-xs text-gray-400 space-y-2">
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-activeRed"></i> Multi-variable feature selection</li>
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-activeRed"></i> Dynamic form weight adjustments</li>
+                    </ul>
+                </div>
+
+                <!-- Feature 2: Full-Stack Web App -->
+                <div class="glass-panel p-8 rounded-2xl hover:border-activeRed/50 transition-all group">
+                    <div class="w-12 h-12 rounded-xl bg-activeRed/10 border border-activeRed/30 flex items-center justify-center text-activeRed text-xl mb-6 group-hover:scale-110 transition-transform shadow-red-glow">
+                        <i class="fa-solid fa-bolt"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white uppercase tracking-wider mb-3">Django API Integration</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed mb-4">
+                        Seamlessly bridges our trained Python machine learning pipeline directly into a responsive HTML/CSS/JS frontend via Django endpoints.
+                    </p>
+                    <ul class="text-xs text-gray-400 space-y-2">
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-activeRed"></i> Sub-second API response time</li>
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-activeRed"></i> Interactive dashboards & charts</li>
+                    </ul>
+                </div>
+
+                <!-- Feature 3: Cybersecurity Shield -->
+                <div id="security" class="glass-panel p-8 rounded-2xl hover:border-activeRed/50 transition-all group relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-24 h-24 bg-activeRed/5 rounded-bl-full pointer-events-none"></div>
+                    <div class="w-12 h-12 rounded-xl bg-activeRed/10 border border-activeRed/30 flex items-center justify-center text-activeRed text-xl mb-6 group-hover:scale-110 transition-transform shadow-red-glow">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white uppercase tracking-wider mb-3">Secured Infrastructure</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed mb-4">
+                        Hardened by our dedicated cybersecurity specialist to protect database integrity, user sessions, and prediction query privacy.
+                    </p>
+                    <ul class="text-xs text-gray-400 space-y-2">
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-activeRed"></i> Encrypted PostgreSQL storage</li>
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-activeRed"></i> CSRF & SQL Injection shielding</li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <section class="py-16 relative overflow-hidden">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="glass-panel-active p-8 sm:p-12 rounded-3xl text-center relative z-10 border border-activeRed/50 shadow-red-glow-lg">
+                <h2 class="text-3xl sm:text-5xl font-black text-white uppercase italic tracking-tight mb-4">
+                    READY TO PREDICT THE NEXT MATCHDAY?
+                </h2>
+                <p class="text-gray-300 max-w-xl mx-auto text-sm sm:text-base mb-8">
+                    Join coaches, analysts, and sports enthusiasts leveraging data-driven football predictions today.
+                </p>
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                    <button onclick="openModal('registerModal')" class="w-full sm:w-auto px-8 py-4 bg-activeRed hover:bg-red-600 text-white font-extrabold rounded-xl shadow-red-glow transition-all uppercase tracking-wider text-sm">
+                        Create Free Account Now
+                    </button>
+                    <button onclick="openModal('loginModal')" class="w-full sm:w-auto px-8 py-4 bg-sportCard hover:bg-sportBorder text-white font-bold rounded-xl border border-sportBorder transition-all uppercase tracking-wider text-sm">
+                        Sign In to Dashboard
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-black border-t border-sportBorder/60 py-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-activeRed rounded flex items-center justify-center text-white text-sm font-bold shadow-red-glow">
+                    <i class="fa-solid fa-bolt"></i>
+                </div>
+                <span class="font-bold text-lg text-white font-['Teko'] tracking-wider">STRIKE<span class="text-activeRed">AI</span></span>
+                <span class="text-xs text-gray-500">© 2026 Strike Predictive Analytics</span>
+            </div>
+            <div class="flex items-center gap-6 text-xs text-gray-400">
+                <a href="#" class="hover:text-activeRed transition-colors">Privacy Policy</a>
+                <a href="#" class="hover:text-activeRed transition-colors">Terms of Service</a>
+                <a href="#" class="hover:text-activeRed transition-colors">API Docs</a>
+                <a href="#" class="hover:text-activeRed transition-colors">Security Audit</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- LOGIN MODAL -->
+    <div id="loginModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="glass-panel w-full max-w-md p-6 sm:p-8 rounded-2xl border border-activeRed/40 shadow-red-glow relative">
+            <button onclick="closeModal('loginModal')" class="absolute top-4 right-4 text-gray-400 hover:text-white text-xl">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            
+            <div class="text-center mb-6">
+                <div class="w-12 h-12 bg-activeRed/20 border border-activeRed/50 rounded-xl mx-auto flex items-center justify-center text-activeRed text-xl mb-3">
+                    <i class="fa-solid fa-right-to-bracket"></i>
+                </div>
+                <h3 class="text-2xl font-black text-white uppercase italic">Welcome Back</h3>
+                <p class="text-xs text-gray-400 mt-1">Sign in to access your saved player forecasts</p>
+            </div>
+
+            <form onsubmit="handleAuthSubmit(event, 'Login Successful!')" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Username or Email</label>
+                    <input type="text" required placeholder="analyst@strikeai.com" class="w-full bg-sportCard border border-sportBorder rounded-lg p-3 text-sm text-white focus:outline-none focus:border-activeRed">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Password</label>
+                    <input type="password" required placeholder="••••••••" class="w-full bg-sportCard border border-sportBorder rounded-lg p-3 text-sm text-white focus:outline-none focus:border-activeRed">
+                </div>
+                <button type="submit" class="w-full py-3.5 bg-activeRed hover:bg-red-600 text-white font-bold rounded-lg uppercase tracking-wider text-xs shadow-red-glow transition-all">
+                    Sign In
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- REGISTER MODAL -->
+    <div id="registerModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="glass-panel w-full max-w-md p-6 sm:p-8 rounded-2xl border border-activeRed/40 shadow-red-glow relative">
+            <button onclick="closeModal('registerModal')" class="absolute top-4 right-4 text-gray-400 hover:text-white text-xl">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            
+            <div class="text-center mb-6">
+                <div class="w-12 h-12 bg-activeRed/20 border border-activeRed/50 rounded-xl mx-auto flex items-center justify-center text-activeRed text-xl mb-3">
+                    <i class="fa-solid fa-user-plus"></i>
+                </div>
+                <h3 class="text-2xl font-black text-white uppercase italic">Create Account</h3>
+                <p class="text-xs text-gray-400 mt-1">Join the premier football prediction platform</p>
+            </div>
+<!----Regestration----->
+            <form onsubmit="handleAuthSubmit(event, 'Account Created Successfully!')" class="space-y-4">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">First Name</label>
+                        <input type="text" name="first_name" required placeholder="Enter your name" class="w-full bg-sportCard border border-sportBorder rounded-lg p-3 text-sm text-white focus:outline-none focus:border-activeRed">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Last Name</label>
+                        <input type="text" name="last_name" required placeholder="Enter your surname" class="w-full bg-sportCard border border-sportBorder rounded-lg p-3 text-sm text-white focus:outline-none focus:border-activeRed">
+                    </div>
+                </div>
+
+                <!-- Email Address (Matches your schema constraint: email OR phone required) -->
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Email Address</label>
+                    <input type="email" name="email" placeholder="Enter your mail address" class="w-full bg-sportCard border border-sportBorder rounded-lg p-3 text-sm text-white focus:outline-none focus:border-activeRed">
+                    <span class="text-[10px] text-gray-500 mt-1 block">Required if phone is not provided</span>
+                </div>
+
+                <!-- Phone Number (Matches your SQL constraints for Irish +353 or Indian +91 formats) -->
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Phone Number</label>
+                    <input type="tel" name="phone" placeholder="+353 8X XXX XXXX or +91 XXXXXXXXXX" class="w-full bg-sportCard border border-sportBorder rounded-lg p-3 text-sm text-white focus:outline-none focus:border-activeRed">
+                    <span class="text-[10px] text-gray-500 mt-1 block"></span>
+                </div>
+
+                <!-- Password (For user_passwords table) -->
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Password</label>
+                    <input type="password" name="password" required placeholder="Enter your passsword" class="w-full bg-sportCard border border-sportBorder rounded-lg p-3 text-sm text-white focus:outline-none focus:border-activeRed">
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="w-full py-3.5 bg-activeRed hover:bg-red-600 text-white font-bold rounded-lg uppercase tracking-wider text-xs shadow-red-glow transition-all">
+                    Register Account
+                </button>
+            </form>
+<!-- till -->
+        </div>
+    </div>
+
+    <script>
+        // Player Dataset Mock
+        const playerDatabase = {
+            haaland: { name: 'Erling Haaland', role: 'Striker • Man City', icon: 'fa-user-ninja', baseGoals: 1.10, baseAssists: 0.20, passAcc: 81, rating: 8.5 },
+            mbappe: { name: 'Kylian Mbappé', role: 'Forward • Real Madrid', icon: 'fa-bolt', baseGoals: 0.95, baseAssists: 0.35, passAcc: 85, rating: 8.8 },
+            bellingham: { name: 'Jude Bellingham', role: 'Midfielder • Real Madrid', icon: 'fa-shield-halved', baseGoals: 0.55, baseAssists: 0.45, passAcc: 89, rating: 8.6 },
+            vinicius: { name: 'Vinícius Júnior', role: 'Winger • Real Madrid', icon: 'fa-person-running', baseGoals: 0.70, baseAssists: 0.50, passAcc: 83, rating: 8.7 },
+            debruyne: { name: 'Kevin De Bruyne', role: 'Playmaker • Man City', icon: 'fa-wand-magic-sparkles', baseGoals: 0.30, baseAssists: 0.85, passAcc: 92, rating: 8.9 }
+        };
+
+        let currentContext = 'home';
+        let predictionChartInstance = null;
+
+        // Initialize Chart on Window Load
+        window.onload = function() {
+            initChart();
+            updatePrediction();
+        };
+
+        function initChart() {
+            const ctx = document.getElementById('predictionChart').getContext('2d');
+            predictionChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Shots on Target', 'Key Passes', 'Dribble Succ %', 'Def Pressures'],
+                    datasets: [{
+                        label: 'Predicted Metric Value',
+                        data: [4.2, 3.1, 78, 14.5],
+                        backgroundColor: 'rgba(255, 23, 68, 0.8)',
+                        borderColor: '#ff1744',
+                        borderWidth: 1,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: '#9ca3af', font: { size: 10 } },
+                            grid: { display: false }
+                        },
+                        y: {
+                            ticks: { color: '#9ca3af', font: { size: 10 } },
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function setMatchContext(context) {
+            currentContext = context;
+            const homeBtn = document.getElementById('homeBtn');
+            const awayBtn = document.getElementById('awayBtn');
+
+            if (context === 'home') {
+                homeBtn.className = "py-2.5 rounded-lg font-bold text-xs uppercase tracking-wider transition-all bg-activeRed text-white shadow-red-glow";
+                awayBtn.className = "py-2.5 rounded-lg font-bold text-xs uppercase tracking-wider transition-all bg-sportCard text-gray-400 border border-sportBorder hover:text-white";
+            } else {
+                awayBtn.className = "py-2.5 rounded-lg font-bold text-xs uppercase tracking-wider transition-all bg-activeRed text-white shadow-red-glow";
+                homeBtn.className = "py-2.5 rounded-lg font-bold text-xs uppercase tracking-wider transition-all bg-sportCard text-gray-400 border border-sportBorder hover:text-white";
+            }
+            updatePrediction();
+        }
+
+        function updatePrediction() {
+            const playerKey = document.getElementById('playerSelect').value;
+            const formVal = parseInt(document.getElementById('formSlider').value);
+            const oppVal = parseInt(document.getElementById('oppSlider').value);
+
+            // Update UI Labels
+            document.getElementById('formVal').innerText = `${formVal}%`;
+            document.getElementById('oppVal').innerText = `${oppVal} / 100`;
+
+            const p = playerDatabase[playerKey];
+
+            // Formula Modifiers
+            const formMultiplier = formVal / 85;
+            const oppDifficultyMultiplier = (110 - oppVal) / 50;
+            const homeAdvantage = currentContext === 'home' ? 1.12 : 0.92;
+
+            // Calculations
+            const predictedXG = Math.max(0.05, (p.baseGoals * formMultiplier * oppDifficultyMultiplier * homeAdvantage)).toFixed(2);
+            const predictedXA = Math.max(0.05, (p.baseAssists * formMultiplier * oppDifficultyMultiplier * homeAdvantage)).toFixed(2);
+            const predictedPass = Math.min(99, Math.round(p.passAcc * (formVal / 90)));
+            const predictedRating = Math.min(9.9, Math.max(5.0, (p.rating * (formVal / 88) * homeAdvantage))).toFixed(1);
+
+            // Update Card
+            document.getElementById('displayPlayerName').innerText = p.name;
+            document.getElementById('displayPlayerRole').innerText = p.role;
+            document.getElementById('playerIcon').className = `fa-solid ${p.icon} text-activeRed text-2xl`;
+
+            document.getElementById('predGoals').innerText = predictedXG;
+            document.getElementById('predAssists').innerText = predictedXA;
+            document.getElementById('predPass').innerText = `${predictedPass}%`;
+            document.getElementById('predRating').innerText = predictedRating;
+
+            // Update Chart
+            if (predictionChartInstance) {
+                const shotsOnTarget = (predictedXG * 2.8).toFixed(1);
+                const keyPasses = (predictedXA * 4.1).toFixed(1);
+                const dribbleSuccess = Math.min(95, Math.round(predictedPass * 0.9));
+                const pressures = Math.round(12 * (100 / formVal));
+
+                predictionChartInstance.data.datasets[0].data = [shotsOnTarget, keyPasses, dribbleSuccess, pressures];
+                predictionChartInstance.update();
+            }
+        }
+
+        function triggerModelRecalculation() {
+            const displayCard = document.getElementById('displayPlayerName').parentElement.parentElement.parentElement;
+            displayCard.classList.add('opacity-50', 'scale-[0.99]');
+            setTimeout(() => {
+                updatePrediction();
+                displayCard.classList.remove('opacity-50', 'scale-[0.99]');
+            }, 300);
+        }
+
+        // Modal Handler Logic
+        function openModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        function handleAuthSubmit(event, message) {
+            event.preventDefault();
+            alert(message);
+            closeModal('loginModal');
+            closeModal('registerModal');
+        }
+    </script>
+</body>
+</html>

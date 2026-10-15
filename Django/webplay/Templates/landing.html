@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Football Performance Predictor</title>
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs//6.5.1/css/all.min.css">
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Segoe UI',sans-serif;
+}
+
+body{
+    background:#ffffff;
+    color:#333;
+}
+
+:root{
+    --aqua:#00c2cb;
+    --dark-aqua:#0096a0;
+    --light:#f5fdff;
+}
+
+/* Navbar */
+nav{
+    background:white;
+    padding:20px 8%;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    box-shadow:0 2px 10px rgba(0,0,0,0.08);
+    position:sticky;
+    top:0;
+}
+
+.logo{
+    font-size:1.8rem;
+    font-weight:bold;
+    color:var(--aqua);
+}
+
+.nav-links a{
+    text-decoration:none;
+    color:#333;
+    margin-left:25px;
+    font-weight:500;
+    transition:0.3s;
+}
+
+.nav-links a:hover{
+    color:var(--aqua);
+}
+
+/* Hero Section */
+.hero{
+    min-height:90vh;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 8%;
+    background:linear-gradient(to right,#ffffff,#e9fdff);
+}
+
+.hero-content{
+    max-width:600px;
+}
+
+.hero-content h1{
+    font-size:4rem;
+    line-height:1.2;
+    margin-bottom:20px;
+}
+
+.hero-content span{
+    color:var(--aqua);
+}
+
+.hero-content p{
+    font-size:1.1rem;
+    margin-bottom:30px;
+    color:#666;
+    line-height:1.7;
+}
+
+.btn{
+    display:inline-block;
+    padding:14px 30px;
+    text-decoration:none;
+    background:var(--aqua);
+    color:white;
+    border-radius:40px;
+    font-weight:bold;
+    transition:0.3s;
+}
+
+.btn:hover{
+    background:var(--dark-aqua);
+    transform:translateY(-3px);
+}
+
+/* Hero image */
+.hero-image{
+    font-size:18rem;
+    color:var(--aqua);
+}
+
+/* Features */
+.features{
+    padding:80px 8%;
+    text-align:center;
+}
+
+.section-title{
+    font-size:2.5rem;
+    margin-bottom:20px;
+}
+
+.section-title span{
+    color:var(--aqua);
+}
+
+.feature-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+    gap:25px;
+    margin-top:50px;
+}
+
+.card{
+    background:white;
+    padding:30px;
+    border-radius:15px;
+    box-shadow:0 5px 20px rgba(0,0,0,0.08);
+    transition:0.3s;
+}
+
+.card:hover{
+    transform:translateY(-8px);
+    background-color: #0096a0;
+}
+
+.card i{
+    font-size:3rem;
+    color:var(--aqua);
+    margin-bottom:20px;
+}
+
+.card h3{
+    margin-bottom:15px;
+}
+
+/* Stats */
+.stats{
+    background:var(--aqua);
+    color:white;
+    padding:80px 8%;
+}
+
+.stats-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+    text-align:center;
+    gap:30px;
+}
+
+.stat h2{
+    font-size:3rem;
+}
+
+.stat p{
+    margin-top:10px;
+}
+
+/* CTA */
+.cta{
+    text-align:center;
+    padding:100px 8%;
+}
+
+.cta h2{
+    font-size:2.8rem;
+    margin-bottom:20px;
+}
+
+.cta p{
+    max-width:700px;
+    margin:auto;
+    color:#666;
+    margin-bottom:30px;
+}
+
+/* Footer */
+footer{
+    background:#0a0a0a;
+    color:white;
+    text-align:center;
+    padding:25px;
+}
+
+@media(max-width:900px){
+
+.hero{
+    flex-direction:column;
+    text-align:center;
+    padding-top:50px;
+}
+
+.hero-content h1{
+    font-size:2.8rem;
+}
+
+.hero-image{
+    font-size:10rem;
+    margin-top:40px;
+}
+}
+</style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav>
+    <div class="logo">
+        ⚽ FootPredict
+    </div>
+
+    <div class="nav-links">
+        Home</a>
+        <a>layers</a>
+        <a>Prediction</a>
+        <a>dashboard</a>
+        <a href="#">Login</a></div>
+</nav>
+
+<!-- Hero Section -->
+<section class="hero">
+
+    <div class="hero-content">
+        <h1>Predict Football Player <span>Performance</span> With AI</h1>
+
+        <p>
+            Analyze player statistics, explore historical performance,
+            and generate intelligent predictions using Machine Learning.
+            Built for coaches, scouts, analysts, and football enthusiasts.
+        </p>
+
+        #
+            Get Prediction
+        </a>
+    </div>
+
+    <div class="hero-image">
+        <i class="fa-solid fa-futbol"></i>
+    </div>
+
+</section>
+
+<!-- Features -->
+<section class="features">
+
+    <h2 class="section-title">
+        Why Choose <span>FootPredict?</span>
+    </h2>
+
+    <div class="feature-grid">
+
+        <div class="card">
+            <i class="fa-solid fa-chart-line"></i>
+            <h3>Performance Analytics</h3>
+            <p>
+                Analyze player statistics from previous seasons and
+                uncover valuable performance insights.
+            </p>
+        </div>
+
+        <div class="card">
+            <i class="fa-solid fa-brain"></i>
+            <h3>Machine Learning</h3>
+            <p>
+                Intelligent prediction models trained on historical
+                football player datasets.
+            </p>
+        </div>
+
+        <div class="card">
+            <i class="fa-solid fa-users"></i>
+            <h3>Player Comparison</h3>
+            <p>
+                Compare multiple players and make accurate
+                data-driven decisions.
+            </p>
+        </div>
+
+        <div class="card">
+            <i class="fa-solid fa-trophy"></i>
+            <h3>Scouting Support</h3>
+            <p>
+                Discover future talent and evaluate players before
+                making important decisions.
+            </p>
+        </div>
+
+    </div>
+
+</section>
+
+<!-- Statistics -->
+<section class="stats">
+
+    <div class="stats-grid">
+
+        <div class="stat">
+            <h2>10K+</h2>
+            <p>Player Records</p>
+        </div>
+
+        <div class="stat">
+            <h2>95%</h2>
+            <p>Prediction Accuracy</p>
+        </div>
+
+        <div class="stat">
+            <h2>100+</h2>
+            <p>Teams Analyzed</p>
+        </div>
+
+        <div class="stat">
+            <h2>24/7</h2>
+            <p>Performance Insights</p>
+        </div>
+
+    </div>
+
+</section>
+
+<!-- CTA -->
+<section class="cta">
+
+    <h2>Ready to Discover Future Football Stars?</h2>
+
+    <p>
+        Use advanced machine learning algorithms to predict player
+        performance and make smarter football decisions.
+    </p>
+
+    #Start Predicting</a>
+
+</section>
+
+<!-- Footer -->
+<footer>
+    © 2026 FootPredict | Football Player Performance Prediction System
+</footer>
+
+</body>
+</html>
