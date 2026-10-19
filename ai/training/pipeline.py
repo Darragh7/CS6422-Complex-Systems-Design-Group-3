@@ -11,6 +11,13 @@ CONFIG = {
 }
 
 
+def load_historical(competition: str = "PL", seasons=(2024,), **kwargs) -> list[dict]:
+    """Stage 2 option: real finished matches from football-data.org (cached CSV)."""
+    from .data_pull import pull_matches
+
+    return pull_matches(competition, list(seasons), **kwargs).to_dict("records")
+
+
 def run(matches: list[dict], config: dict = CONFIG) -> dict:
     """Chain stages: parse -> inspect -> clean -> label -> split -> features -> select model -> evaluate."""
     df = pp.load_api_matches(matches)
