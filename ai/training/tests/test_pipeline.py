@@ -5,7 +5,7 @@ from ai.training.train import CANDIDATES
 def test_pipeline_smoke():
     results = ["H", "D", "A", "H", "H"] * 4
     matches = [
-        {"id": i, "home_team": "X", "away_team": "Y",
+        {"id": i, "home_team": "XYZW"[i % 4], "away_team": "YZWX"[i % 4],
          "date": f"2026-01-{i + 1:02d}T15:00:00Z", "status": "FINISHED",
          "home_score": {"H": 2, "D": 1, "A": 0}[r], "away_score": 1 if r != "A" else 2}
         for i, r in enumerate(results)
@@ -13,6 +13,7 @@ def test_pipeline_smoke():
     matches.append({"id": 99, "home_team": "X", "away_team": "Y", "date": "2026-02-01T15:00:00Z",
                     "status": "SCHEDULED", "home_score": None, "away_score": None})
     out = run(matches)
+    assert out["selection_scores"]["mean_log_loss"].notna().all()
     assert set(out) >= {"log_loss", "accuracy", "baseline_home_accuracy"}
     assert 0 <= out["accuracy"] <= 1
     assert out["selected_model"] in CANDIDATES
