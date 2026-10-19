@@ -19,13 +19,15 @@ def load_historical(competition: str = "PL", seasons=(2024,), **kwargs) -> list[
 
 
 def run(matches: list[dict], config: dict = CONFIG) -> dict:
-    """Chain stages: parse -> inspect -> clean -> label -> split -> features -> select model -> evaluate."""
+    """Chain stages: parse -> inspect -> clean -> label -> features (prior-only) -> split -> select model -> evaluate."""
     df = pp.load_api_matches(matches)
     pp.inspect(df)
     df = pp.label_result(pp.clean(df))
+    # Features use prior matches only, so build on the full timeline, then split.
+    df = df.join(tr.build_features(df))
     train_df, test_df = pp.time_split(df, config["test_frac"])
     # Stage 6 (explore) happens in notebooks on train_df only.
-    X_train, y_train = tr.build_features(train_df), train_df[config["target"]]
+    X_train, y_train = train_df[tr.FEATURE_COLUMNS], train_df[config["target"]]
     best, model, scores = tr.select_model(X_train, y_train, n_splits=config["cv_splits"])
-    result = tr.evaluate(model, tr.build_features(test_df), test_df[config["target"]])
+    result = tr.evaluate(model, test_df[tr.FEATURE_COLUMNS], test_df[config["target"]])
     return {**result, "selected_model": best, "selection_scores": scores}

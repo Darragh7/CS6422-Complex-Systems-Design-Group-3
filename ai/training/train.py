@@ -8,13 +8,9 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import TimeSeriesSplit
 from sklearn.metrics import accuracy_score, log_loss
 
+from .features import FEATURE_COLUMNS, build_features  # noqa: F401 (re-exported)
+
 LABELS = ["A", "D", "H"]
-
-
-def build_features(df: pd.DataFrame) -> pd.DataFrame:
-    """Stage 7b: placeholder features. Must only use info known before kickoff."""
-    # TODO: rolling form (last-N points/goals), Elo, head-to-head, rest days.
-    return pd.DataFrame({"is_home": np.ones(len(df))}, index=df.index)
 
 
 def train_model(X: pd.DataFrame, y: pd.Series):
