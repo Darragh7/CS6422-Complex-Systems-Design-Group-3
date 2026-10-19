@@ -29,5 +29,5 @@ def run(matches: list[dict], config: dict = CONFIG) -> dict:
     # Stage 6 (explore) happens in notebooks on train_df only.
     X_train, y_train = train_df[tr.FEATURE_COLUMNS], train_df[config["target"]]
     best, model, scores = tr.select_model(X_train, y_train, n_splits=config["cv_splits"])
-    result = tr.evaluate(model, test_df[tr.FEATURE_COLUMNS], test_df[config["target"]])
+    result = tr.evaluate(model, test_df[tr.FEATURE_COLUMNS], test_df[config["target"]], y_train)
     return {**result, "selected_model": best, "selection_scores": scores}

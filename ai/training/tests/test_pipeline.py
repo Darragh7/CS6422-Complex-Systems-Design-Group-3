@@ -14,7 +14,7 @@ def test_pipeline_smoke():
                     "status": "SCHEDULED", "home_score": None, "away_score": None})
     out = run(matches)
     assert out["selection_scores"]["mean_log_loss"].notna().all()
-    assert set(out) >= {"log_loss", "accuracy", "baseline_home_accuracy"}
+    assert set(out) >= {"log_loss", "accuracy", "baseline_home_accuracy", "baseline_prior_log_loss"}
     assert 0 <= out["accuracy"] <= 1
     assert out["selected_model"] in CANDIDATES
     assert set(out["selection_scores"]["model"]) == set(CANDIDATES)

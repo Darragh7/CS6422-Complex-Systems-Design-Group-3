@@ -10,11 +10,13 @@ import pandas as pd
 WINDOW = 5
 DEFAULT_REST_DAYS = 7.0  # used when a team has no previous match in the data
 H2H_NEUTRAL_PPG = 1.5  # midpoint of 0..3 points, used when teams haven't met
+REST_DAYS_CAP = 14.0  # summer/winter breaks otherwise dominate the scale
+ELO_START, ELO_K, ELO_HOME_ADV = 1500.0, 20.0, 60.0
 
 TEAM_STATS = ["ppg", "gf", "ga", "rest_days"]
 FEATURE_COLUMNS = (
     [f"{side}_{s}" for side in ("home", "away") for s in TEAM_STATS]
-    + ["home_no_history", "away_no_history", "h2h_home_ppg", "h2h_n"]
+    + ["home_no_history", "away_no_history", "h2h_home_ppg", "h2h_n", "elo_diff"]
 )
 
 
@@ -62,10 +64,30 @@ def head_to_head(df: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame({"h2h_home_ppg": pd.Series(ppg), "h2h_n": pd.Series(n)})
 
 
+def elo_diff(df: pd.DataFrame, k: float = ELO_K, home_adv: float = ELO_HOME_ADV) -> pd.Series:
+    """Pre-match Elo difference (home - away), updated AFTER each match.
+
+    Ratings carry across seasons (no regression to the mean yet; TODO maybe).
+    New teams (e.g. promoted) start at ELO_START.
+    """
+    ratings: dict[str, float] = {}
+    diff = {}
+    for idx, row in df.sort_values("date", kind="stable").iterrows():
+        h = ratings.get(row["home_team"], ELO_START)
+        a = ratings.get(row["away_team"], ELO_START)
+        diff[idx] = h - a
+        expected_home = 1 / (1 + 10 ** ((a - h - home_adv) / 400))
+        actual = 1.0 if row["home_score"] > row["away_score"] else 0.5 if row["home_score"] == row["away_score"] else 0.0
+        ratings[row["home_team"]] = h + k * (actual - expected_home)
+        ratings[row["away_team"]] = a - k * (actual - expected_home)
+    return pd.Series(diff, name="elo_diff")
+
+
 def build_features(df: pd.DataFrame, window: int = WINDOW) -> pd.DataFrame:
     """Feature table indexed like df. Expects clean() output (finished, parsed dates).
 
-    Early-season gaps: rolling stats -> 0 with *_no_history=1; rest days -> 7.
+    Early-season gaps: rolling stats -> 0 with *_no_history=1; rest days -> 7
+    (and capped at REST_DAYS_CAP).
     """
     # TODO: when load_static_csv is implemented, concatenate the static history
     # with API matches (dedupe by id) BEFORE calling this, so form/h2h use it.
@@ -78,6 +100,6 @@ def build_features(df: pd.DataFrame, window: int = WINDOW) -> pd.DataFrame:
         out[f"{side}_no_history"] = part["no_history"]
     for side in ("home", "away"):
         out[[f"{side}_ppg", f"{side}_gf", f"{side}_ga"]] = out[[f"{side}_ppg", f"{side}_gf", f"{side}_ga"]].fillna(0.0)
-        out[f"{side}_rest_days"] = out[f"{side}_rest_days"].fillna(DEFAULT_REST_DAYS)
-    out = out.join(head_to_head(df))
+        out[f"{side}_rest_days"] = out[f"{side}_rest_days"].fillna(DEFAULT_REST_DAYS).clip(upper=REST_DAYS_CAP)
+    out = out.join(head_to_head(df)).join(elo_diff(df))
     return out[FEATURE_COLUMNS]

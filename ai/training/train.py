@@ -3,28 +3,37 @@ import numpy as np
 import pandas as pd
 from sklearn.base import clone
 from sklearn.dummy import DummyClassifier
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import HistGradientBoostingClassifier, RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import TimeSeriesSplit
 from sklearn.metrics import accuracy_score, log_loss
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
 
 from .features import FEATURE_COLUMNS, build_features  # noqa: F401 (re-exported)
+from .moe import ContextMoE
 
 LABELS = ["A", "D", "H"]
 
 
 def train_model(X: pd.DataFrame, y: pd.Series):
-    """Stage 8: fit a simple multinomial logistic regression baseline."""
-    return LogisticRegression(max_iter=1000).fit(X, y)
+    """Stage 8: fit the scaled logistic regression candidate directly."""
+    return clone(CANDIDATES["logreg"]).fit(X, y)
 
 
 # Model selection candidates. None is assumed best; selection is by CV log loss.
-# TODO: future candidate - Mixture-of-Experts (e.g. per-context experts + gating),
-# added here only if it beats these on time-series CV.
 CANDIDATES = {
     "dummy_prior": DummyClassifier(strategy="prior"),
-    "logreg": LogisticRegression(max_iter=1000),
-    "random_forest": RandomForestClassifier(n_estimators=100, random_state=0),
+    "logreg": make_pipeline(StandardScaler(), LogisticRegression(C=0.1, max_iter=1000)),
+    "random_forest": RandomForestClassifier(
+        n_estimators=300, max_depth=5, min_samples_leaf=20, random_state=0
+    ),
+    "hist_gb": HistGradientBoostingClassifier(
+        learning_rate=0.03, max_depth=3, max_iter=150, min_samples_leaf=40,
+        l2_regularization=1.0, early_stopping=False, random_state=0,
+    ),
+    # Bare sklearn-only Mixture of Experts (see moe.py); just another candidate.
+    "moe_context": ContextMoE(),
 }
 
 
@@ -55,11 +64,17 @@ def select_model(X: pd.DataFrame, y: pd.Series, candidates: dict = CANDIDATES, n
     return best, clone(candidates[best]).fit(X, y), scores
 
 
-def evaluate(model, X: pd.DataFrame, y: pd.Series) -> dict:
-    """Stage 8: log_loss + accuracy, compared against an always-home baseline."""
-    proba = model.predict_proba(X)
-    return {
-        "log_loss": float(log_loss(y, proba, labels=model.classes_)),
+def evaluate(model, X: pd.DataFrame, y: pd.Series, y_train: pd.Series | None = None) -> dict:
+    """Stage 8: log_loss + accuracy vs always-home and (if y_train given) class-prior baselines."""
+    labels = sorted(set(y) | set(model.classes_))
+    result = {
+        "log_loss": float(log_loss(y, _aligned_proba(model, X, labels), labels=labels)),
         "accuracy": float(accuracy_score(y, model.predict(X))),
         "baseline_home_accuracy": float((y == "H").mean()),
     }
+    if y_train is not None:
+        prior = DummyClassifier(strategy="prior").fit(np.zeros((len(y_train), 1)), y_train)
+        Z = np.zeros((len(y), 1))
+        result["baseline_prior_log_loss"] = float(log_loss(y, _aligned_proba(prior, Z, labels), labels=labels))
+        result["baseline_prior_accuracy"] = float(accuracy_score(y, prior.predict(Z)))
+    return result

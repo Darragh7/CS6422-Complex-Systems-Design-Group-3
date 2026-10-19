@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from ai.training.features import (DEFAULT_REST_DAYS, FEATURE_COLUMNS, H2H_NEUTRAL_PPG,
+from ai.training.features import (DEFAULT_REST_DAYS, FEATURE_COLUMNS, H2H_NEUTRAL_PPG, REST_DAYS_CAP,
                                   build_features)
 
 
@@ -57,3 +57,20 @@ def test_head_to_head_default_and_history():
     assert feats.loc[0, "h2h_home_ppg"] == H2H_NEUTRAL_PPG and feats.loc[0, "h2h_n"] == 0
     # B hosts A at match 5; previously B lost 2-0 to A -> B has 0 ppg in h2h
     assert feats.loc[5, "h2h_home_ppg"] == 0.0 and feats.loc[5, "h2h_n"] == 1
+
+
+def test_rest_days_capped():
+    rows = ROWS + [("A", "D", "2024-12-01", 1, 0)]
+    feats = build_features(make_df(rows))
+    assert feats.iloc[-1]["home_rest_days"] == REST_DAYS_CAP
+
+
+def test_elo_prior_only_and_direction():
+    feats = build_features(make_df(ROWS))
+    assert feats.loc[0, "elo_diff"] == 0.0  # both teams start equal
+    # A beat B in match 0, so when B hosts A in match 5, B is rated lower
+    assert feats.loc[5, "elo_diff"] < 0
+    # leakage: changing the final match's result must not change its own Elo diff
+    changed = [list(r) for r in ROWS]
+    changed[5][3], changed[5][4] = 5, 0
+    assert build_features(make_df(changed)).loc[5, "elo_diff"] == feats.loc[5, "elo_diff"]
