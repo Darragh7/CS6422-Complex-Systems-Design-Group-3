@@ -4,7 +4,7 @@
 
 1. Copy `.env.example` to `.env` and replace each placeholder with a local value.
 2. Keep `.env` out of Git. The repository ignores `.env` and `.env.*`, while allowing the placeholder-only `.env.example`.
-3. Settings are read from environment variables (and the local `.env` file). `DATABASE_URL` and `SECRET_KEY` have no insecure source-code defaults; configure them before starting the backend.
+3. Settings are read from environment variables (and the local `.env` file). Docker Compose requires `DATABASE_URL` and `SECRET_KEY`; Kubernetes reads them from `scoreline-secrets`. The application also has development defaults for direct, non-container startup; never rely on those defaults for a deployment.
 4. Do not paste credentials into issues, pull requests, chat, logs, screenshots, or test fixtures.
 
 ## Commit and CI scanning

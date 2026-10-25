@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: scoreline-config
+  namespace: scoreline
+data:
+  FOOTBALL_API_BASE_URL: "https://api.football-data.org/v4"
+  FOOTBALL_API_TIMEOUT: "10"
