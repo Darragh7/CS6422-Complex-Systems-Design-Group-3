@@ -40,6 +40,11 @@ if (-not (Test-Path "backend\requirements.txt")) {
 
 Write-Host "Project structure found." -ForegroundColor Green
 
+if (-not (Test-Path ".env") -and (Test-Path ".env.example")) {
+    Copy-Item ".env.example" ".env"
+    Write-Host "Created .env from .env.example; review local values before starting services." -ForegroundColor Yellow
+}
+
 # Create virtual environment
 Write-Host ""
 Write-Host "[3/4] Creating virtual environment..." -ForegroundColor Yellow
