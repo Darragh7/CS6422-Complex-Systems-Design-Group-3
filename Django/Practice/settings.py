@@ -55,7 +55,7 @@ ROOT_URLCONF = 'Practice.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'webplay' / 'Templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

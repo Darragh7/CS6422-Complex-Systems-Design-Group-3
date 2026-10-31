@@ -2,27 +2,33 @@
 
 ## First-time setup
 
-- Windows: run `./setup.ps1` from PowerShell at the repository root.
-- Linux/macOS VM: run `sh setup.sh` from the repository root.
+1. Install and start Docker Desktop (with Docker Compose).
+2. From the project root, create your local environment file:
 
-Both scripts prepare a Python virtual environment, install `backend/requirements.txt`, and create `.env` from `.env.example` when needed. Set your local database/API values before running the API.
+   ```powershell
+   Copy-Item .env.example .env
+   ```
 
-## Run with Docker Compose
+3. Edit `.env` and set `DATABASE_URL` to your Supabase PostgreSQL connection string and `SECRET_KEY` to a strong secret. Set `FOOTBALL_API_KEY` if you want to use the external football data service. Keep `.env` private; it is for local configuration.
 
-Install Docker Engine/Desktop with the Compose plugin. Copy `.env.example` to `.env`, set `DATABASE_URL` to the PostgreSQL connection string from Supabase, and set a strong `SECRET_KEY`. Then run:
+## Run the development environment
 
-```sh
+From the project root, build and start both services:
+
+```powershell
 docker compose up --build
 ```
 
-Compose builds and starts the FastAPI backend, which connects to your Supabase database; it does not run a local PostgreSQL container. Check `http://localhost:8000/ready` to verify both the API and database connection, and open `http://localhost:8000/docs` to inspect the API. Stop it with Ctrl+C (or `docker compose down`). See [the deployment guide](docs/development-deployment.md) for the Kubernetes workflow.
+- Django website: <http://localhost:8000/webplay/>
+- FastAPI documentation: <http://localhost:8002/docs>
+- FastAPI/database readiness: <http://localhost:8002/ready>
 
-## Run in Kubernetes
+Django serves the website, while FastAPI serves the API in a separate container. The API connects to Supabase using `DATABASE_URL`. To stop the services, press **Ctrl+C**. To start them in the background, use `docker compose up --build -d`, and stop them with `docker compose down`.
 
-For a local Minikube setup, follow [the deployment guide](docs/development-deployment.md). It covers building/loading the container, creating local-only secrets, applying manifests, and checking the API.
 
 ## Project docs
 
+- [Kubernetes deployment guide](docs/development-deployment.md)
 - [Development process](docs/DEV_PROCESS.pdf)
 - [Security documentation](docs/security/)
 - [Licensing review and prediction disclaimer](docs/security/licensing-and-disclaimers.md)
