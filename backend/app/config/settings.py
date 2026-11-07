@@ -1,3 +1,4 @@
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -11,12 +12,9 @@ class Settings(BaseSettings):
     # seconds to wait for the football API before giving up
     football_api_timeout: float = 10.0
 
-    database_url: str = (
-        "postgresql://sportsuser:sportspassword"
-        "@localhost:5432/sportsdb"
-    )
+    database_url: str = Field(min_length=1)
 
-    secret_key: str = "development-secret"
+    secret_key: str = Field(min_length=1)
 
     model_config = SettingsConfigDict(
         env_file=".env",
