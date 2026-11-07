@@ -9,7 +9,7 @@
    Copy-Item .env.example .env
    ```
 
-3. Edit `.env` and set `DATABASE_URL` to your Supabase PostgreSQL connection string and `SECRET_KEY` to a strong secret. Set `FOOTBALL_API_KEY` if you want to use the external football data service. Keep `.env` private; it is for local configuration.
+3. Edit `.env` and set `DATABASE_URL` to your Supabase PostgreSQL connection string. Set both `SECRET_KEY` and `DJANGO_SECRET_KEY` to unique strong secrets; generate values with `python -c "import secrets; print(secrets.token_urlsafe(48))"`. Set `DJANGO_ALLOWED_HOSTS` to the hostnames serving the website, and set `FOOTBALL_API_KEY` if you want to use the external football data service. Keep `.env` private; it is for local configuration.
 
 ## Run the development environment
 

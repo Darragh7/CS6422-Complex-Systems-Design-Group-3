@@ -15,7 +15,9 @@ On Windows, use `.\setup.ps1` in PowerShell instead. The setup script prepares t
 Edit `.env` and set:
 
 - `DATABASE_URL` to the Supabase PostgreSQL connection string.
-- `SECRET_KEY` to a unique random value. Generate one with `python -c "import secrets; print(secrets.token_urlsafe(48))"`.
+- `SECRET_KEY` and `DJANGO_SECRET_KEY` to separate unique random values. Generate each with `python -c "import secrets; print(secrets.token_urlsafe(48))"`.
+- `DJANGO_ALLOWED_HOSTS` to a comma-separated list of hostnames that serve the Django website. The local Compose default allows localhost only.
+- `DJANGO_DEBUG` to `false` for deployments. It defaults to `false`.
 - `FOOTBALL_API_KEY` if you want live football-data.org API results; otherwise leave it empty.
 
 Keep `.env` private and out of Git. Never paste connection strings or credentials into issues, pull requests, chat, logs, or screenshots.
