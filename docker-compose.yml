@@ -28,11 +28,12 @@ services:
       dockerfile: Dockerfile
     depends_on:
       backend:
-        condition: service_started
+        condition: service_healthy
     environment:
       DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?Set DJANGO_SECRET_KEY in .env}
       DJANGO_DEBUG: ${DJANGO_DEBUG:-false}
       DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,[::1]}
+      BACKEND_API_URL: http://backend:8000
     ports:
       - "8000:8000"
     volumes:

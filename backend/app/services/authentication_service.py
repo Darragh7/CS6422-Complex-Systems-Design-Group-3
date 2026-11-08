@@ -1,8 +1,14 @@
+from argon2 import PasswordHasher
+from argon2.exceptions import InvalidHashError, VerificationError
+
+
+_password_hasher = PasswordHasher()
+
+
 class AuthenticationService:
 
     def hash_password(self, password: str) -> str:
-        # Password hashing will be implemented here.
-        return password
+        return _password_hasher.hash(password)
 
     def verify_password(
         self,
@@ -10,5 +16,7 @@ class AuthenticationService:
         password_hash: str
     ) -> bool:
 
-        # Password verification will be implemented here.
-        return password == password_hash
+        try:
+            return _password_hasher.verify(password_hash, password)
+        except (InvalidHashError, VerificationError):
+            return False

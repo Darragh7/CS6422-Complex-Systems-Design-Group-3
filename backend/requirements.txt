@@ -10,6 +10,7 @@ psycopg2-binary==2.9.13
 # Configuration
 pydantic-settings==2.15.0
 python-dotenv==1.2.3
+argon2-cffi==25.1.0
 
 # HTTP / external APIs
 httpx==0.28.1

@@ -5,7 +5,8 @@
 1. Copy `.env.example` to `.env` and replace each placeholder with a local value.
 2. Keep `.env` out of Git. The repository ignores `.env` and `.env.*`, while allowing the placeholder-only `.env.example`.
 3. Settings are read from environment variables (and the local `.env` file). Backend startup requires non-empty `DATABASE_URL` and `SECRET_KEY`; Docker Compose also requires `DJANGO_SECRET_KEY`. Kubernetes reads backend secrets from `scoreline-secrets`. Django also requires `DJANGO_SECRET_KEY` and defaults to `DEBUG=False`. No development credentials are built into the backend settings.
-4. Do not paste credentials into issues, pull requests, chat, logs, screenshots, or test fixtures.
+4. Account registration and sign-in are proxied by Django to the internal FastAPI service (`BACKEND_API_URL`). Database credentials stay on the backend; browser forms never receive the Supabase connection string.
+5. Do not paste credentials into issues, pull requests, chat, logs, screenshots, or test fixtures.
 
 ## Commit and CI scanning
 

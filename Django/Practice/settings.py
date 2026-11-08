@@ -32,6 +32,7 @@ DEBUG = os.environ.get("DJANGO_DEBUG", "false").strip().lower() in {
     "yes",
     "on",
 }
+BACKEND_API_URL = os.environ.get("BACKEND_API_URL", "http://localhost:8002").rstrip("/")
 
 ALLOWED_HOSTS = [
     host.strip()
