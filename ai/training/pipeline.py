@@ -1,5 +1,6 @@
 """ScoreLine end-to-end skeleton pipeline. Stage 1 (objective/metrics) is CONFIG."""
 from . import preprocessing as pp
+from . import features as fe
 from . import train as tr
 
 CONFIG = {
@@ -8,6 +9,7 @@ CONFIG = {
     "baseline": "always_home",
     "test_frac": 0.2,
     "cv_splits": 3,
+    "features": fe.SELECTED_FEATURES,  # fe.BASELINE for the original 13
 }
 
 
@@ -24,10 +26,11 @@ def run(matches: list[dict], config: dict = CONFIG) -> dict:
     pp.inspect(df)
     df = pp.label_result(pp.clean(df))
     # Features use prior matches only, so build on the full timeline, then split.
-    df = df.join(tr.build_features(df))
+    df = df.join(fe.build_extended_features(df))
     train_df, test_df = pp.time_split(df, config["test_frac"])
     # Stage 6 (explore) happens in notebooks on train_df only.
-    X_train, y_train = train_df[tr.FEATURE_COLUMNS], train_df[config["target"]]
+    cols = list(config["features"])
+    X_train, y_train = train_df[cols], train_df[config["target"]]
     best, model, scores = tr.select_model(X_train, y_train, n_splits=config["cv_splits"])
-    result = tr.evaluate(model, test_df[tr.FEATURE_COLUMNS], test_df[config["target"]], y_train)
-    return {**result, "selected_model": best, "selection_scores": scores}
+    result = tr.evaluate(model, test_df[cols], test_df[config["target"]], y_train)
+    return {**result, "selected_model": best, "selection_scores": scores, "features": cols}

@@ -105,7 +105,8 @@ def test_candidate_no_leakage_from_own_score(k):
 
 def test_candidate_venue_form_uses_same_venue_only():
     out = _cand(ROWS)
-    # A hosts C at match 4; A's only previous HOME game was a win (match 0) -> 3.0
-    assert out.loc[4, "home_venue_ppg"] == 3.0
-    # B hosts A at match 5; A's only previous AWAY game was a win at D (match 3) -> 3.0
-    assert out.loc[5, "away_venue_ppg"] == 3.0
+    # A hosts C at match 4; A's only previous HOME game was a win (match 0) -> 3.0,
+    # shrunk to the 1.5 prior because < 3 venue games: (3 + 2 * 1.5) / 3 = 2.0
+    assert out.loc[4, "home_venue_ppg"] == 2.0
+    # B hosts A at match 5; A's only previous AWAY game was a win at D (match 3) -> same
+    assert out.loc[5, "away_venue_ppg"] == 2.0

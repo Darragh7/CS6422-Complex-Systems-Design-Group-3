@@ -7,10 +7,9 @@ cannot leak test-set structure into feature or model choices.
 import numpy as np
 import pandas as pd
 
-from .features import ELO_HOME_ADV, FEATURE_COLUMNS, _team_long
+from .features import ELO_HOME_ADV, FEATURE_COLUMNS, elo_closeness, ewm_and_venue_form, expected_goals
 
 RESULTS = ["H", "D", "A"]
-EWM_SPAN = 10
 
 
 def feature_correlation(features_df: pd.DataFrame, method: str = "pearson") -> pd.DataFrame:
@@ -77,34 +76,13 @@ def vif(features_df: pd.DataFrame, cols=None) -> pd.Series:
 
 
 def candidate_features(df: pd.DataFrame, base: pd.DataFrame) -> pd.DataFrame:
-    """PROPOSED features for EDA only (not in FEATURE_COLUMNS, not used by train.py).
-
-    Prior-only like features.py: every per-team stat is shift(1)-ed before ewm,
-    league averages are shifted expanding means. `base` = build_features(df).
+    """Proposed features for the EDA plots. The logic now lives in features.py
+    (FEATURE_GROUPS / build_extended_features); this just reuses it. `base` = build_features(df).
     """
-    long = _team_long(df)
-    long["gd"] = long["gf"] - long["ga"]
-    g = long.groupby("team", sort=False)
-    for col in ("gf", "ga", "gd"):
-        long[f"ewm_{col}"] = g[col].transform(lambda s: s.shift(1).ewm(span=EWM_SPAN, min_periods=1).mean())
-    # venue-specific form: points in previous 5 home (or away) games only
-    long["venue_ppg"] = long.groupby(["team", "side"], sort=False)["pts"].transform(
-        lambda s: s.shift(1).rolling(5, min_periods=1).mean())
-    h = long[long["side"] == "home"].set_index("match").reindex(df.index)
-    a = long[long["side"] == "away"].set_index("match").reindex(df.index)
-
+    h, a = ewm_and_venue_form(df)
     out = pd.DataFrame(index=df.index)
-    out["abs_elo_diff"] = base["elo_diff"].abs()
+    out["abs_elo_diff"] = elo_closeness(base["elo_diff"])["abs_elo_diff"]
     out["elo_exp_home"] = 1 / (1 + 10 ** (-(base["elo_diff"] + ELO_HOME_ADV) / 400))
     out["ewm_gd_diff"] = (h["ewm_gd"] - a["ewm_gd"]).fillna(0.0)
-    out["home_venue_ppg"] = h["venue_ppg"].fillna(1.5)
-    out["away_venue_ppg"] = a["venue_ppg"].fillna(1.5)
-    # Poisson-style: league prior average x attack strength x opponent defence weakness
-    ordered = df.sort_values("date", kind="stable")
-    lg_home = ordered["home_score"].shift(1).expanding().mean().reindex(df.index).fillna(1.5)
-    lg_away = ordered["away_score"].shift(1).expanding().mean().reindex(df.index).fillna(1.2)
-    lg_team = (lg_home + lg_away) / 2
-    out["exp_home_goals"] = (lg_home * (h["ewm_gf"] / lg_team) * (a["ewm_ga"] / lg_team)).fillna(lg_home)
-    out["exp_away_goals"] = (lg_away * (a["ewm_gf"] / lg_team) * (h["ewm_ga"] / lg_team)).fillna(lg_away)
-    out["exp_total_goals"] = out["exp_home_goals"] + out["exp_away_goals"]
-    return out
+    out["home_venue_ppg"], out["away_venue_ppg"] = h["venue_ppg"], a["venue_ppg"]
+    return out.join(expected_goals(df, h, a))
