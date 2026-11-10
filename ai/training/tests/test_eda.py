@@ -59,3 +59,53 @@ def test_target_correlation_home_win_sign():
     assert set(out.columns) == {"home_win", "draw", "goal_diff"}
     assert out.loc["elo_diff", "home_win"] > 0.7
     assert out.loc["elo_diff", "goal_diff"] == pytest.approx(1.0)
+
+
+# --- outcome_rates / vif / proposed candidate features (EDA only, not wired into training) ---
+from ai.training.eda import candidate_features, outcome_rates, vif  # noqa: E402
+from ai.training.features import build_features  # noqa: E402
+from ai.training.tests.test_features import ROWS, make_df  # noqa: E402
+
+
+def test_outcome_rates_rows_sum_to_one():
+    labels = pd.Series(["H", "D", "A", "H"] * 10)
+    out = outcome_rates(pd.Series(np.arange(40.0)), labels, 4)
+    assert list(out.columns) == ["H", "D", "A", "n"]
+    assert np.allclose(out[["H", "D", "A"]].sum(axis=1), 1.0)
+    assert out["n"].sum() == 40
+
+
+def test_vif_flags_collinear_pair():
+    X = _synthetic()
+    v = vif(X)
+    assert v["home_ppg"] > 100 and v["away_ppg"] > 100  # planted near-duplicate
+    assert v["elo_diff"] < 2
+
+
+def _cand(rows):
+    df = make_df(rows)
+    return candidate_features(df, build_features(df))
+
+
+def test_candidate_shape_and_no_nans():
+    out = _cand(ROWS)
+    assert len(out) == len(ROWS)
+    assert not out.isna().any().any()
+    assert (out["abs_elo_diff"] >= 0).all()
+    assert np.allclose(out["exp_total_goals"], out["exp_home_goals"] + out["exp_away_goals"])
+
+
+@pytest.mark.parametrize("k", range(len(ROWS)))
+def test_candidate_no_leakage_from_own_score(k):
+    base = _cand(ROWS)
+    changed = [list(r) for r in ROWS]
+    changed[k][3], changed[k][4] = 9, 7
+    pd.testing.assert_frame_equal(base.iloc[: k + 1], _cand(changed).iloc[: k + 1])
+
+
+def test_candidate_venue_form_uses_same_venue_only():
+    out = _cand(ROWS)
+    # A hosts C at match 4; A's only previous HOME game was a win (match 0) -> 3.0
+    assert out.loc[4, "home_venue_ppg"] == 3.0
+    # B hosts A at match 5; A's only previous AWAY game was a win at D (match 3) -> 3.0
+    assert out.loc[5, "away_venue_ppg"] == 3.0
