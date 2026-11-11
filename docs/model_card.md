@@ -8,7 +8,7 @@ Scoreline estimates the probability of a **home win, draw and away win** for mat
 
 - **Intended use:** information and entertainment on the Scoreline website.
 - **Not for:** betting or gambling decisions. The probabilities are estimates, not guarantees, and the site shows a "not betting advice" disclaimer.
-- **Output:** three probabilities in the order `[home, draw, away]` that sum to 1, plus the model version (see the prediction JSON contract in `contracts/`).
+- **Output:** three probabilities in the order `[home, draw, away]` that sum to 1, plus the model version (the exact JSON format is still to be agreed with the backend and frontend).
 
 ## 2. The model
 
@@ -21,15 +21,15 @@ The final prediction is the **simple average of four models**:
 | Logistic regression | Multinomial classifier on the match features | C=0.003 |
 | XGBoost | Gradient-boosted trees on the match features | 171 trees, depth 3 |
 
-- **Version:** scoreline_v1, trained on 14,535 matches (seasons 2018/19 to 2026/27 so far). Exact settings and metrics are in `models/scoreline_v1/metadata.json`.
-- Elo and Poisson are recomputed from the match history at prediction time. Logistic regression and XGBoost are stored as files.
+- **Version:** scoreline_v1, trained on 14,535 matches (seasons 2018/19 to 2026/27 so far). Exact settings and metrics are in `ai/ml_pipeline/models/scoreline_v1/metadata.json`.
+- Elo and Poisson are recomputed from the match history at prediction time. Logistic regression and XGBoost are saved as `.joblib` files by `export_model.py`; these files are git-ignored, so regenerate them or get them from the ML team.
 
 ## 3. Data
 
 - **Results, shots and odds:** football-data.co.uk (CSV files), 5 leagues, 2018/19 onward.
 - **Upcoming fixtures:** football-data.org API [status: pending API key].
 - **Bookmaker odds** (mostly Pinnacle closing prices, average margin 2.9%) are used **only as a benchmark**, never as a model input.
-- **Cleaning:** one row per match, dates parsed to UTC, incomplete or inconsistent rows dropped (none in the final data), team names standardized with `team_mapping.csv`.
+- **Cleaning:** one row per match, dates parsed into a standard format, incomplete or inconsistent rows dropped (none in the final data), team names kept as in the source (`team_mapping.csv` is a reference list for matching names across sources and is not yet applied in the pipeline).
 - **Overall result split:** 43.3% home wins, 25.3% draws, 31.4% away wins. Average goals per match: 1.54 home, 1.26 away.
 - **Licensing:** [confirm the terms of each source with the Security owner (SEC-09) and add the required attribution].
 
@@ -100,7 +100,7 @@ On the validation season the ensemble's predicted probabilities were close to ob
 
 ## 9. How to reproduce
 
-From `ml/pipeline`, with the Python packages in `requirements.txt` installed:
+From `ai/ml_pipeline`, with the Python packages in `requirements.txt` installed:
 
 ```
 python ingest.py historical --start 2018 --end 2026
