@@ -1,0 +1,105 @@
+{
+  "model_version": "scoreline_v1",
+  "trained_at_utc": "2026-11-10T20:28:59+00:00",
+  "data": {
+    "first_match": "2018-08-10",
+    "last_match": "2026-09-20",
+    "n_matches": 14535
+  },
+  "ensemble": {
+    "members": [
+      "Elo",
+      "Poisson",
+      "Logistic regression",
+      "XGBoost"
+    ],
+    "combination": "simple average of probabilities; column order [home, draw, away]"
+  },
+  "features": [
+    "pts5_h",
+    "pts10_h",
+    "pts_venue5_h",
+    "gf5_h",
+    "gf10_h",
+    "gf_venue5_h",
+    "ga5_h",
+    "ga10_h",
+    "ga_venue5_h",
+    "sf5_h",
+    "sa5_h",
+    "sotf5_h",
+    "sota5_h",
+    "rest_days_h",
+    "n_prev_h",
+    "pts5_a",
+    "pts10_a",
+    "pts_venue5_a",
+    "gf5_a",
+    "gf10_a",
+    "gf_venue5_a",
+    "ga5_a",
+    "ga10_a",
+    "ga_venue5_a",
+    "sf5_a",
+    "sa5_a",
+    "sotf5_a",
+    "sota5_a",
+    "rest_days_a",
+    "n_prev_a",
+    "pts5_diff",
+    "gf5_diff",
+    "ga5_diff",
+    "pts10_diff",
+    "sotf5_diff",
+    "sota5_diff",
+    "rest_days_diff",
+    "home_elo_pre",
+    "away_elo_pre",
+    "elo_diff",
+    "div_D1",
+    "div_E0",
+    "div_F1",
+    "div_I1",
+    "div_SP1"
+  ],
+  "logistic_regression": {
+    "C": 0.003
+  },
+  "boosting": {
+    "type": "XGBoost",
+    "n_trees": 171
+  },
+  "elo": {
+    "K": 20,
+    "HOME_ADV": 60,
+    "MEAN": 1500,
+    "NEW_TEAM": 1450,
+    "REGRESS": 0.25,
+    "probability_scale": 170.0,
+    "draw_width": 0.6000000000000001
+  },
+  "poisson": {
+    "WINDOW_DAYS": 1095,
+    "HALF_LIFE_DAYS": 365,
+    "ALPHA": 0.001,
+    "MAX_GOALS": 10
+  },
+  "metrics_validation_2024_25": {
+    "log_loss": 0.9819,
+    "brier": 0.5851,
+    "rps": 0.1996,
+    "accuracy": 0.5342
+  },
+  "metrics_final_test_2025_26": {
+    "log_loss": 0.9922,
+    "brier": 0.5914,
+    "rps": 0.202,
+    "accuracy": 0.5143
+  },
+  "libraries": {
+    "python": "3.14.7",
+    "scikit-learn": "1.9.1",
+    "pandas": "3.0.6",
+    "numpy": "2.5.2"
+  }
+}
