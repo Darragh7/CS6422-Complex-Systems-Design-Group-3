@@ -98,3 +98,4 @@ dist/
 
 # ML pipeline (ai/ml_pipeline): local data and outputs, never commit
 ai/ml_pipeline/data/
+!ai/ml_pipeline/team_mapping.csv
