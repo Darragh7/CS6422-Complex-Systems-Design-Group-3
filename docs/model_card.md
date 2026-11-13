@@ -1,7 +1,5 @@
 # Scoreline model card (scoreline_v1)
 
-Fill in the items in [square brackets] before committing.
-
 ## 1. Purpose
 
 Scoreline estimates the probability of a **home win, draw and away win** for matches in five leagues: Premier League, La Liga, Bundesliga, Serie A and Ligue 1.
@@ -27,11 +25,11 @@ The final prediction is the **simple average of four models**:
 ## 3. Data
 
 - **Results, shots and odds:** football-data.co.uk (CSV files), 5 leagues, 2018/19 onward.
-- **Upcoming fixtures:** football-data.org API [status: pending API key].
+- **Upcoming fixtures:** football-data.org API (v4). Fixtures ingestion is written but not yet tested with the team's API key.
 - **Bookmaker odds** (mostly Pinnacle closing prices, average margin 2.9%) are used **only as a benchmark**, never as a model input.
 - **Cleaning:** one row per match, dates parsed into a standard format, incomplete or inconsistent rows dropped (none in the final data), team names kept as in the source (`team_mapping.csv` is a reference list for matching names across sources and is not yet applied in the pipeline).
 - **Overall result split:** 43.3% home wins, 25.3% draws, 31.4% away wins. Average goals per match: 1.54 home, 1.26 away.
-- **Licensing:** [confirm the terms of each source with the Security owner (SEC-09) and add the required attribution].
+- **Licensing:** football-data.org is covered in `docs/security/licensing-and-disclaimers.md`. The football-data.co.uk historical data and the bookmaker odds it provides are listed there as not yet reviewed, so their terms still need to be checked and recorded before any public or commercial use.
 
 ## 4. Features (45)
 
@@ -120,9 +118,9 @@ Raw and cleaned data are not stored in Git. Re-run the scripts to regenerate the
 ## 10. Monitoring and updates
 
 - After matches finish, predictions are compared with results (ML-16): weekly log loss and accuracy.
-- **Retraining trigger:** [agree one, for example weekly log loss worse than the Elo baseline for four weeks in a row].
+- **Retraining trigger:** proposed: weekly log loss worse than the Elo baseline for four weeks in a row (to be agreed with the team).
 - New versions get a new name (scoreline_v2, ...) and are compared on a fresh, untouched period before replacing this one.
 
 ## 11. Owners
 
-ML: [your name and teammate]. Questions: [contact].
+ML: Sriram Krishnamurthi (add teammates if applicable). Questions: via the team chat or a GitHub issue.
