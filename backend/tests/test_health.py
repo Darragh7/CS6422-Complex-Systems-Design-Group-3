@@ -17,12 +17,28 @@ def test_health_check_does_not_require_database():
 def test_readiness_check_confirms_database_connection(monkeypatch):
     connection = MagicMock()
     monkeypatch.setattr(engine, "connect", lambda: connection)
+    inspector = MagicMock()
+    inspector.get_table_names.return_value = ["users", "user_passwords"]
+    monkeypatch.setattr("app.main.inspect", lambda connection: inspector)
 
     response = TestClient(app).get("/ready")
 
     assert response.status_code == 200
     assert response.json() == {"status": "ready", "database": "connected"}
     connection.__enter__.return_value.execute.assert_called_once()
+
+
+def test_readiness_check_returns_unavailable_when_authentication_tables_are_missing(monkeypatch):
+    connection = MagicMock()
+    monkeypatch.setattr(engine, "connect", lambda: connection)
+    inspector = MagicMock()
+    inspector.get_table_names.return_value = ["matches"]
+    monkeypatch.setattr("app.main.inspect", lambda connection: inspector)
+
+    response = TestClient(app).get("/ready")
+
+    assert response.status_code == 503
+    assert response.json() == {"detail": "Database schema unavailable"}
 
 
 def test_readiness_check_returns_unavailable_when_database_is_down(monkeypatch):
